@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sistem Informasi Siswa</title>
+
+<style>
+
+body{
+  font-family:system-ui;
+  background:#f2f4f8;
+  margin:0;
+  text-align:center;
+}
+
+/* ---------- HEADER ---------- */
+
+.mainHeader{
+  background:#442e04;
+  color:white;
+  padding:20px 15px;
+
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.mainHeader h1{
+  margin:0;
+  font-size:22px;
+  letter-spacing:1px;
+  text-align:center;
+  flex:1;
+}
+
+.logo{
+  height:50px;
+  width:auto;
+  object-fit:contain;
+}
+
+/* Make smaller on mobile */
+@media (max-width:600px){
+  .logo{
+    height:35px;
+  }
+
+  .mainHeader h1{
+    font-size:16px;
+  }
+}
+
+/* ---------- MAIN MENU ---------- */
+
+#menu{
+  padding:40px 20px;
+}
+
+.bigBtn{
+  display:block;
+  width:260px;
+  max-width:90%;
+  margin:15px auto;
+  padding:18px;
+  font-size:18px;
+  border:none;
+  border-radius:12px;
+  background:#2d6cdf;
+  color:white;
+  cursor:pointer;
+}
+
+.bigBtn:hover{
+  background:#1e4fa8;
+}
+
+/* ---------- SEARCH AREA ---------- */
+
+#searchArea{
+  display:none;
+  padding:20px;
+}
+
+#searchInput{
+width:100%;
+max-width:480px;
+padding:16px 14px;
+font-size:16px;
+border-radius:12px;
+border:1px solid #ccc;
+box-sizing:border-box;
+}
+
+
+#backBtn{
+  margin-bottom:15px;
+  background:#888;
+}
+
+/* ---------- SUGGESTION CARD ---------- */
+
+.suggestion{
+background:white;
+padding:12px 14px;
+margin:8px 0;
+border-radius:12px;
+cursor:pointer;
+box-shadow:0 2px 8px rgba(0,0,0,0.08);
+
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:10px;
+}
+
+/* LEFT SIDE INFO */
+.info{
+text-align:left;
+min-width:0; /* VERY IMPORTANT for ellipsis */
+}
+
+.name{
+font-weight:600;
+font-size:15px;
+
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
+}
+
+.meta{
+font-size:13px;
+color:#666;
+.name-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+}
+
+.name{
+  flex:1;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
+}
+
+/* STATUS BADGE */
+.badge{
+flex-shrink:0;
+padding:6px 10px;
+border-radius:999px;
+font-weight:700;
+font-size:12px;
+}
+
+.badge.red{
+background:#fde7e6;
+color:#d93025;
+}
+
+.badge.green{
+background:#e6f4ea;
+color:#1e8e3e;
+}
+
+/* ---------- ATTENDANCE ROW ---------- */
+
+.absenRow{
+  display:flex;
+  justify-content:space-between;
+  padding:10px 4px;
+  border-bottom:1px solid #eee;
+  font-size:14px;
+}
+
+.absenTanggal{
+  color:#444;
+}
+
+.absenStatus{
+  font-weight:600;
+}
+.status{
+  display:inline-block;
+  padding:4px 10px;
+  border-radius:8px;
+  font-size:12px;
+  font-weight:bold;
+  margin-top:6px;
+}
+
+.denda{
+  background:#ffe5e5;
+  color:#c62828;
+}
+
+.lunas{
+  background:#e7f7ea;
+  color:#1b8f3a;
+}
+
+.sisa{
+  font-size:13px;
+  margin-top:4px;
+  color:#444;
+}
+
+.nama{
+  font-weight:600;
+  font-size:15px;
+  word-break:break-word;
+}
+
+.overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.35);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:999;
+}
+
+.hidden{
+  display:none;
+}
+
+.detail-box{
+  background:white;
+  width:min(95%,500px);
+  max-height:80vh;
+  overflow:auto;
+  border-radius:14px;
+  padding:18px;
+  box-shadow:0 10px 30px rgba(0,0,0,.2);
+}
+</style>
+
+</head>
+
+<body>
+
+<header class="mainHeader">
+  <img src="logo-kiri.png" class="logo leftLogo">
+  <h1>SISTEM INFORMASI EKSTRAKURIKULER SMK DIPONEGORO TUMPANG</h1>
+  <img src="logo-kanan.png" class="logo rightLogo">
+</header>
+
+<!-- MAIN MENU -->
+
+<div id="menu">
+  <button class="bigBtn" id="btnCari">Cari Nama Siswa</button>
+  <button class="bigBtn">Data Tiap Kelas</button>
+</div>
+
+<!-- SEARCH MODE -->
+
+<div id="searchArea">
+    <input type="text" id="searchInput" placeholder="Ketik nama siswa...">
+    <button class="bigBtn" id="backBtn">Kembali</button>
+  <div id="suggestions"></div>
+</div>
+
+<div id="overlay" class="overlay hidden">
+  <div id="detailBox" class="detail-box"></div>
+</div>
+
+<script>
+
+const API_URL = "https://script.google.com/macros/s/AKfycbx33aFCfQSa_gH_5h_-Qlq-OcifA5TWh9OBTEI4am3wr5UC7EyDhsFoaCYLott2iC45/exec";
+
+let siswaData = [];
+
+/* ---------- LOAD DATA ---------- */
+
+async function loadData(){
+  try{
+    const res = await fetch(API_URL + "?t=" + Date.now())
+    siswaData = await res.json();
+
+    input.disabled = false;
+    input.placeholder = "Ketik nama siswa...";
+  }catch(err){
+    input.placeholder = "Gagal memuat data (refresh halaman)";
+    console.error(err);
+  }
+}
+loadData();
+
+/* ---------- MENU NAV ---------- */
+
+const menu = document.getElementById("menu");
+const searchArea = document.getElementById("searchArea");
+
+document.getElementById("btnCari").onclick = ()=>{
+  menu.style.display="none";
+  searchArea.style.display="block";
+};
+
+document.getElementById("backBtn").onclick = ()=>{
+  searchArea.style.display="none";
+  menu.style.display="block";
+  document.getElementById("suggestions").innerHTML="";
+  document.getElementById("searchInput").value="";
+};
+
+/* ---------- SEARCH ---------- */
+function rupiah(angka){
+  angka = Number(angka) || 0;
+  return "Rp " + angka.toLocaleString("id-ID");
+}
+
+const input = document.getElementById("searchInput");
+input.disabled = true;
+input.placeholder = "Memuat data siswa...";
+const suggestions = document.getElementById("suggestions");
+
+input.addEventListener("input", ()=>{
+  const keyword = input.value.toLowerCase();
+  suggestions.innerHTML="";
+
+  if(keyword.length < 2) return;
+
+  const results = siswaData.filter(s =>
+    s.nama.toLowerCase().includes(keyword)
+  ).slice(0,15);
+
+  results.forEach(s=>{
+    const div = document.createElement("div");
+    div.className="suggestion";
+
+    const sisa = Number(s.sisaDenda) || 0;
+const lunas = sisa === 0;
+const statusText = lunas ? "LUNAS" : "DENDA";
+
+    div.innerHTML = `
+  <div class="info">
+    <div class="name-row">
+      <span class="name">${s.nama}</span>
+      <span class="badge ${lunas ? 'green':'red'}">${statusText}</span>
+    </div>
+
+    <div class="meta">${s.kelas}</div>
+    <div class="meta">${s.ekstra}</div>
+
+    ${!lunas ? `<div class="sisa">Sisa Denda : ${rupiah(Math.abs(sisa))}</div>` : ``}
+  </div>
+`;
+
+    div.onclick = ()=>showAttendance(s);
+    suggestions.appendChild(div);
+  });
+});
+
+/* ---------- POPUP ---------- */
+
+const overlay = document.getElementById("overlay");
+const detailBox = document.getElementById("detailBox");
+
+// Close when clicking outside
+overlay.addEventListener("click",(e)=>{
+  if(e.target === overlay){
+    overlay.classList.add("hidden");
+  }
+});
+
+function showAttendance(s){
+
+  let html = `
+    <h3 style="margin-top:0">${s.nama}</h3>
+    <div style="margin-bottom:10px; font-size:14px; color:#666;">
+      ${s.kelas} • ${s.ekstra}
+    </div>
+    <hr>
+  `;
+
+  if(!s.absensi || s.absensi.length === 0){
+    html += `<p>Tidak ada data absensi</p>`;
+  }else{
+    s.absensi.forEach(a=>{
+      html += `
+        <div class="absenRow">
+          <div class="absenTanggal">${a.tanggal}</div>
+          <div class="absenStatus">${a.status || '-'}</div>
+        </div>
+      `;
+    });
+  }
+
+  detailBox.innerHTML = html;
+  overlay.classList.remove("hidden");
+}
+</script>
+
+
+
+</body>
+</html>
