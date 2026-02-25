@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sistem Informasi Siswa</title>
+<title>Sistem Informasi ekstrakurikuler SMK Diponegoro Tumpang</title>
 
 <style>
 
@@ -13,12 +13,13 @@ body{
   background:#f2f4f8;
   margin:0;
   text-align:center;
+  overflow-y:scroll;
 }
 
 /* ---------- HEADER ---------- */
 
 .mainHeader{
-  background:#442e04;
+  background:#9B6A06;
   color:white;
   padding:20px 15px;
 
@@ -96,7 +97,7 @@ box-sizing:border-box;
 
 #backBtn{
   margin-bottom:15px;
-  background:#888;
+  background:#CC8B08;
 }
 
 /* ---------- SUGGESTION CARD ---------- */
@@ -241,6 +242,105 @@ color:#1e8e3e;
   padding:18px;
   box-shadow:0 10px 30px rgba(0,0,0,.2);
 }
+
+/* ---------- ICON MENU ---------- */
+
+.menuButtons{
+  padding:80px 20px;
+  display:flex;
+  justify-content:center;
+  align-items:center;      /* add this */
+  gap:60px;                /* more space */
+  flex-wrap:wrap;
+  max-width:900px;         /* prevent stretching */
+  margin:0 auto;           /* force center */
+}
+
+.iconBtn{
+  width:170px;
+  height:180px;
+  border-radius:22px;
+  border:none;
+  background:#CC8B08;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  transition:.25s;
+  box-shadow:0 10px 25px rgba(0,0,0,.25);
+}
+
+#btnWakel{
+  background:#CC8B08;
+}
+
+.iconBtn img{
+  width:85px;
+  height:85px;
+  object-fit:contain;
+}
+
+.btnLabel{
+  margin-top:14px;
+  font-size:16px;
+  color:white;
+  font-weight:700;
+  letter-spacing:.8px;
+}
+
+.iconBtn:hover{
+  transform:translateY(-8px) scale(1.03);
+  box-shadow:0 18px 40px rgba(0,0,0,.35);
+}
+
+/* mobile */
+@media (max-width:600px){
+  .iconBtn{
+    width:110px;
+    height:120px;
+  }
+  .iconBtn img{
+    width:52px;
+    height:52px;
+  }
+}
+
+/* ---------- FOOTER ---------- */
+
+.mainFooter{
+  margin-top:80px;
+  padding:40px 20px;
+  background:#2b2b2b;
+  color:#ccc;
+  text-align:center;
+}
+
+.footerTitle{
+  font-size:16px;
+  font-weight:600;
+  color:white;
+  letter-spacing:.5px;
+}
+
+.footerSub{
+  margin-top:6px;
+  font-size:14px;
+  color:#aaa;
+}
+
+.footerNote{
+  margin-top:16px;
+  font-size:13px;
+  color:#888;
+}
+
+.footerSignature{
+  margin-top:20px;
+  font-size:12px;
+  color:#666;
+  letter-spacing:.5px;
+}
 </style>
 
 </head>
@@ -249,15 +349,24 @@ color:#1e8e3e;
 
 <header class="mainHeader">
   <img src="logo-kiri.png" class="logo leftLogo">
-  <h1>SISTEM INFORMASI EKSTRAKURIKULER SMK DIPONEGORO TUMPANG</h1>
+  <h1>SELAMAT DATANG DI SISTEM PELAPORAN EKSTRAKURIKULER</h1>
   <img src="logo-kanan.png" class="logo rightLogo">
 </header>
 
 <!-- MAIN MENU -->
 
-<div id="menu">
-  <button class="bigBtn" id="btnCari">Cari Nama Siswa</button>
-  <button class="bigBtn">Data Tiap Kelas</button>
+<div id="menu" class="menuButtons">
+
+  <button id="btnCari" class="iconBtn" title="Cari Nama Siswa">
+    <img src="nama siswa.png" alt="Cari">
+    <div class="btnLabel">Cari Nama siswa</div>
+  </button>
+
+  <button id="btnWakel" class="iconBtn" title="Data Tiap Kelas">
+    <img src="wakel.png" alt="Data Kelas">
+    <div class="btnLabel">Untuk Wali kelas</div>
+  </button>
+
 </div>
 
 <!-- SEARCH MODE -->
@@ -306,7 +415,7 @@ document.getElementById("btnCari").onclick = ()=>{
 
 document.getElementById("backBtn").onclick = ()=>{
   searchArea.style.display="none";
-  menu.style.display="block";
+  menu.style.display="flex";
   document.getElementById("suggestions").innerHTML="";
   document.getElementById("searchInput").value="";
 };
@@ -397,9 +506,35 @@ function showAttendance(s){
   detailBox.innerHTML = html;
   overlay.classList.remove("hidden");
 }
+
+document.getElementById("year").textContent = new Date().getFullYear();
 </script>
 
 
+<footer class="mainFooter">
+  <div class="footerContent">
+    <div class="footerTitle">
+      Sistem Informasi Ekstrakurikuler
+    </div>
 
+    <div class="footerSub">
+      SMK Diponegoro Tumpang
+    </div>
+
+    <div class="footerNote">
+      Dikembangkan untuk kebutuhan administrasi ekstrakurikuler.
+    </div>
+
+    <div class="footerSignature">
+  © <span id="year"></span> Chusnul Khitam Azza,S.Kom
+</div>
+<div class="footerContact">
+  Contact Person: 
+  <a href="https://wa.me/6282142786235?text=Halo%20Admin%2C%20saya%20ingin%20bertanya%20tentang%20ekstrakurikuler." target="_blank">
+    Koordinator ekstrakurikuler 
+  </a>
+ </div>
+  </div>
+</footer>
 </body>
 </html>
