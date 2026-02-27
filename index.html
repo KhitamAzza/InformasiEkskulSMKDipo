@@ -68,7 +68,7 @@ body{
   font-size:18px;
   border:none;
   border-radius:12px;
-  background:#2d6cdf;
+  background:#CC8B08;
   color:white;
   cursor:pointer;
 }
@@ -305,7 +305,189 @@ color:#1e8e3e;
     height:52px;
   }
 }
+/* ---------- LIST VIEW FOR WAKEL ---------- */
+.list-container {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
 
+.class-header {
+  background: #CC8B08;
+  color: white;
+  padding: 12px 16px;
+  margin: 20px 0 10px 0;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 16px;
+  text-align: left;
+}
+
+.list-item {
+  background: white;
+  padding: 14px 16px;
+  margin: 8px 0;
+  border-radius: 10px;
+  border-left: 4px solid #d93025;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.list-item:hover {
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+
+.list-item.safe {
+  border-left-color: #1e8e3e;
+}
+
+.list-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.list-item-name {
+  font-weight: 700;
+  font-size: 16px;
+  color: #222;
+  flex: 1;
+}
+
+.list-item-row {
+  font-size: 13px;
+  color: #555;
+  margin-top: 3px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.list-item-label {
+  color: #888;
+  min-width: 85px;
+}
+
+.list-item-value {
+  color: #333;
+  font-weight: 500;
+}
+
+.list-item-denda {
+  color: #c62828;
+  font-weight: 700;
+}
+
+.list-item-aman {
+  color: #1e8e3e;
+  font-weight: 600;
+}
+/* ---------- FLOATING BUTTONS ---------- */
+.floating-btn {
+  position: fixed;
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 100;
+}
+
+.floating-btn:hover {
+  transform: translateY(-4px) scale(1.08);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.35);
+}
+
+.floating-btn:active {
+  transform: translateY(-2px) scale(1.02);
+}
+
+.back-float {
+  left: 20px;
+  bottom: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.whatsapp-float {
+  right: 20px;
+  bottom: 20px;
+  background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+  color: white;
+}
+
+.floating-btn svg {
+  width: 50px;
+  height: 50px;
+  fill: currentColor;
+}
+/* ---------- LOADING DIALOG ---------- */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.loading-box {
+  background: white;
+  padding: 30px 40px;
+  border-radius: 16px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  animation: popIn 0.3s ease;
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #CC8B08;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 16px;
+  color: #333;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.loading-sub {
+  font-size: 13px;
+  color: #888;
+}
 /* ---------- FOOTER ---------- */
 
 .mainFooter{
@@ -396,14 +578,15 @@ let siswaData = [];
 
 async function loadData(){
   try{
-    const res = await fetch(API_URL + "?t=" + Date.now())
+    const res = await fetch(API_URL + "?t=" + Date.now());
     siswaData = await res.json();
-
     input.disabled = false;
     input.placeholder = "Ketik nama siswa...";
+    return siswaData; // Return data for chaining
   }catch(err){
     input.placeholder = "Gagal memuat data (refresh halaman)";
     console.error(err);
+    throw err; // Re-throw for error handling
   }
 }
 loadData();
@@ -427,7 +610,26 @@ document.getElementById("backBtn").onclick = ()=>{
 const wakelArea = document.getElementById("wakelArea");
 const wakelContent = document.getElementById("wakelContent");
 
-document.getElementById("btnWakel").onclick = ()=>{
+document.getElementById("btnWakel").onclick = async () => {
+  // Show loading
+  showLoading("Memuat data kelas...");
+  
+  // Wait for data if not loaded yet
+  if (siswaData.length === 0) {
+    try {
+      await loadData();
+    } catch (err) {
+      hideLoading();
+      alert("Gagal memuat data. Silakan coba lagi.");
+      return;
+    }
+  }
+  
+  // Small delay to ensure UI updates
+  await new Promise(r => setTimeout(r, 300));
+  
+  hideLoading();
+  
   menu.style.display = "none";
   wakelArea.style.display = "block";
   renderWakelView();
@@ -439,9 +641,34 @@ document.getElementById("backWakelBtn").onclick = ()=>{
   wakelContent.innerHTML = "";
 };
 
+function showLoading(text = "Memuat...") {
+  const overlay = document.createElement('div');
+  overlay.className = 'loading-overlay';
+  overlay.id = 'loadingDialog';
+  
+  overlay.innerHTML = `
+    <div class="loading-box">
+      <div class="spinner"></div>
+      <div class="loading-text">${text}</div>
+      <div class="loading-sub">Mohon tunggu sebentar</div>
+    </div>
+  `;
+  
+  document.body.appendChild(overlay);
+}
+
+function hideLoading() {
+  const loader = document.getElementById('loadingDialog');
+  if (loader) {
+    loader.style.opacity = '0';
+    setTimeout(() => loader.remove(), 300);
+  }
+}
+
 // Render all classes with TANGGUNGAN summary
 function renderWakelView(){
-
+document.querySelectorAll('.floating-btn').forEach(btn => btn.remove());
+  
   wakelContent.innerHTML = "";
 
   // Unique classes
@@ -486,49 +713,170 @@ function renderWakelView(){
   });
 }
 
-// Show students in selected class
 function showClassStudents(kelas, students){
-
   wakelContent.innerHTML = "";
 
-  // Header
+  // Store current class data for WhatsApp button
+  wakelContent.dataset.currentKelas = kelas;
+  wakelContent.dataset.currentStudents = JSON.stringify(students);
+
+  // Class header with count
   const header = document.createElement("div");
-  header.style.fontWeight = "700";
-  header.style.fontSize = "16px";
-  header.style.marginBottom = "12px";
-  header.textContent = `${kelas} - Tanggungan`;
+  header.className = "class-header";
+  
+  // Count students with actual tanggungan (for header)
+  const bermasalahCount = students.filter(s => {
+    const sisa = Number(s.sisaDenda) || 0;
+    const syarat = (s.syaratKhusus || "").toString().toLowerCase();
+    return !(sisa === 0 && syarat === "true");
+  }).length;
+  
+  header.textContent = `${kelas} - ${bermasalahCount} Siswa Bermasalah`;
   wakelContent.appendChild(header);
 
-  // Student cards
+  // Create list container
+  const listContainer = document.createElement("div");
+  listContainer.className = "list-container";
+  listContainer.style.paddingBottom = "100px"; // Space for floating buttons
+
   students.forEach(s => {
-
-    const div = document.createElement("div");
-    div.className = "suggestion";
-
     const sisa = Number(s.sisaDenda) || 0;
     const syarat = (s.syaratKhusus || "").toString().toLowerCase();
     const aman = sisa === 0 && syarat === "true";
-    const statusText = aman ? "AMAN" : "TANGGUNGAN";
+    
+    const div = document.createElement("div");
+    div.className = aman ? "list-item safe" : "list-item";
 
-    div.innerHTML = `
-      <div class="info">
-        <div class="name-row">
-          <span class="name">${s.nama}</span>
-          <span class="badge ${aman ? 'green':'red'}">${statusText}</span>
-        </div>
-        <div class="meta">${s.kelas}</div>
-        <div class="meta">${s.ekstra}</div>
-        <div class="sisa">Sisa Denda : ${rupiah(Math.abs(sisa))}</div>
-        <div style="font-size:12px; margin-top:4px; color:#666;">
-          ${aman ? "Tidak ada tanggungan" : "Ada tanggungan"}
-        </div>
+    // Build rows following search rules
+    let rowsHtml = `
+      <div class="list-item-row">
+        <span class="list-item-label">Kelas:</span>
+        <span class="list-item-value">${s.kelas}</span>
+      </div>
+      <div class="list-item-row">
+        <span class="list-item-label">Ekstra:</span>
+        <span class="list-item-value">${s.ekstra}</span>
       </div>
     `;
 
-    div.onclick = ()=>showAttendance(s);
-    wakelContent.appendChild(div);
+    // Only show sisa and tanggungan if not aman
+    if (!aman) {
+      rowsHtml += `
+        <div class="list-item-row">
+          <span class="list-item-label">Sisa Denda:</span>
+          <span class="list-item-value list-item-denda">${rupiah(Math.abs(sisa))}</span>
+        </div>
+        <div class="list-item-row">
+          <span class="list-item-label">Status:</span>
+          <span class="list-item-value" style="color: #d93025; font-weight: 600;">Ada Tanggungan</span>
+        </div>
+      `;
+    } else {
+      rowsHtml += `
+        <div class="list-item-row">
+          <span class="list-item-label">Status:</span>
+          <span class="list-item-value list-item-aman">Tidak ada tanggungan</span>
+        </div>
+      `;
+    }
+
+    div.innerHTML = `
+      <div class="list-item-header">
+        <span class="list-item-name">${s.nama}</span>
+        <span class="badge ${aman ? 'green':'red'}">${aman ? 'AMAN' : 'TANGGUNGAN'}</span>
+      </div>
+      ${rowsHtml}
+    `;
+
+    div.onclick = () => showAttendance(s);
+    listContainer.appendChild(div);
   });
 
+  wakelContent.appendChild(listContainer);
+
+  // Add floating buttons
+  addFloatingButtons(kelas, students);
+}
+
+// Add floating back and WhatsApp buttons
+function addFloatingButtons(kelas, students) {
+  // Remove existing floating buttons if any
+  document.querySelectorAll('.floating-btn').forEach(btn => btn.remove());
+
+  // Back button with custom arrow icon
+  const backBtn = document.createElement('button');
+  backBtn.className = 'floating-btn back-float';
+  backBtn.title = 'Kembali';
+  backBtn.innerHTML = `
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+    </svg>
+  `;
+  backBtn.onclick = () => {
+    document.querySelectorAll('.floating-btn').forEach(btn => btn.remove());
+    renderWakelView();
+  };
+
+  // WhatsApp button with custom WhatsApp icon
+  const waBtn = document.createElement('button');
+  waBtn.className = 'floating-btn whatsapp-float';
+  waBtn.title = 'Kirim ke WhatsApp';
+  waBtn.innerHTML = `
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+    </svg>
+  `;
+  waBtn.onclick = () => generateWhatsAppMessage(kelas, students);
+
+  document.body.appendChild(backBtn);
+  document.body.appendChild(waBtn);
+}
+
+// Generate WhatsApp message
+function generateWhatsAppMessage(kelas, students) {
+  // Filter only students with tanggungan (sisa > 0 OR syarat not true)
+  const bermasalah = students.filter(s => {
+    const sisa = Number(s.sisaDenda) || 0;
+    const syarat = (s.syaratKhusus || "").toString().toLowerCase();
+    return !(sisa === 0 && syarat === "true");
+  });
+
+  if (bermasalah.length === 0) {
+    alert('Tidak ada siswa bermasalah di kelas ini!');
+    return;
+  }
+
+  // Build message
+  let message = `*${kelas}*\n`;
+  message += `Total: ${bermasalah.length} siswa bermasalah\n\n`;
+
+  bermasalah.forEach((s, index) => {
+    const sisa = Number(s.sisaDenda) || 0;
+    const syarat = (s.syaratKhusus || "").toString().toLowerCase();
+    
+    let conditions = [];
+    
+    // Check sisa denda
+    if (sisa > 0) {
+      conditions.push(`sisa denda ${rupiah(sisa)}`);
+    }
+    
+    // Check syarat khusus
+    if (syarat !== "true") {
+      conditions.push('belum memenuhi syarat khusus');
+    }
+    
+    const conditionText = conditions.join(' dan ');
+    
+    message += `${index + 1}. ${s.nama} - ${conditionText}\n`;
+  });
+
+  // Encode for URL
+  const encodedMessage = encodeURIComponent(message);
+  const waUrl = `https://wa.me/?text=${encodedMessage}`;
+  
+  // Open WhatsApp
+  window.open(waUrl, '_blank');
 }
 /* ---------- SEARCH ---------- */
 function rupiah(angka){
