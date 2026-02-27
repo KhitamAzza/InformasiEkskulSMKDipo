@@ -561,7 +561,7 @@ color:#1e8e3e;
 
 <div id="wakelArea" style="display:none; padding:20px;">
   <div id="wakelContent" style="display:flex; flex-wrap:wrap; gap:16px;"></div>
-  <button class="bigBtn" id="backWakelBtn" style="margin-top:20px;">Kembali</button>
+  
 </div>
 
 <div id="overlay" class="overlay hidden">
@@ -635,11 +635,6 @@ document.getElementById("btnWakel").onclick = async () => {
   renderWakelView();
 };
 
-document.getElementById("backWakelBtn").onclick = ()=>{
-  wakelArea.style.display = "none";
-  menu.style.display = "flex";
-  wakelContent.innerHTML = "";
-};
 
 function showLoading(text = "Memuat...") {
   const overlay = document.createElement('div');
@@ -677,10 +672,15 @@ function renderWakelView(){
   )].sort();
 
   uniqueKelas.forEach(kelas => {
-    const students = siswaData.filter(s => {
-      if (s.kelas !== kelas) return false;
-      
-      const sisa = parseFloat(s.sisaDenda) || 0;
+    // Get ALL students in this class
+    const allStudents = siswaData.filter(s => s.kelas === kelas);
+    
+    // Split into bermasalah and aman
+    const studentsBermasalah = [];
+    const studentsAman = [];
+    
+    allStudents.forEach(s => {
+      const sisa = Math.abs(parseFloat(s.sisaDenda) || 0);
       
       let syarat = s.syaratKhusus;
       if (typeof syarat === 'boolean') {
@@ -692,65 +692,60 @@ function renderWakelView(){
       }
       
       const isAman = (sisa === 0 && syarat === true);
-      return !isAman; // Keep if NOT aman
+      
+      if (isAman) {
+        studentsAman.push(s);
+      } else {
+        studentsBermasalah.push(s);
+      }
     });
 
-    if(students.length === 0) return;
+    // Skip if no bermasalah (optional: you can change this to show all classes)
+    if(studentsBermasalah.length === 0 && studentsAman.length === 0) return;
 
-    const totalDenda = students.reduce((sum, s) => {
-      return sum + (parseFloat(s.sisaDenda) || 0);
+    const totalDenda = studentsBermasalah.reduce((sum, s) => {
+      return sum + (Math.abs(parseFloat(s.sisaDenda) || 0));
     }, 0);
 
     const btn = document.createElement("button");
     btn.className = "iconBtn";
     btn.style.width = "calc(50% - 8px)";
     btn.style.height = "100px";
-    btn.style.background = "#CC8B08";
+    btn.style.background = studentsBermasalah.length > 0 ? "#CC8B08" : "#1e8e3e";
     btn.style.flexDirection = "column";
     btn.style.fontSize = "14px";
 
     btn.innerHTML = `
       <div style="font-weight:700; color:white; font-size:16px;">${kelas}</div>
-      <div style="color:white; margin-top:6px;">Total Denda: ${rupiah(totalDenda)}</div>
+      <div style="color:white; margin-top:6px; font-size:12px;">
+        ${studentsBermasalah.length > 0 ? `Bermasalah: ${studentsBermasalah.length}` : 'Semua Aman ✅'}
+      </div>
+      ${studentsBermasalah.length > 0 ? `<div style="color:white; margin-top:4px; font-size:11px;">Total: ${rupiah(totalDenda)}</div>` : ''}
     `;
 
-    btn.onclick = () => showClassStudents(kelas, students);
+    btn.onclick = () => showClassStudents(kelas, studentsBermasalah, studentsAman);
     wakelContent.appendChild(btn);
   });
 }
 
-function showClassStudents(kelas, students){
+function showClassStudents(kelas, studentsBermasalah, studentsAman){
   wakelContent.innerHTML = "";
   wakelContent.dataset.currentKelas = kelas;
-  wakelContent.dataset.currentStudents = JSON.stringify(students);
+  wakelContent.dataset.currentStudents = JSON.stringify(studentsBermasalah);
 
-  // Count students with actual tanggungan
-  const bermasalahCount = students.filter(s => {
-    const sisa = parseFloat(s.sisaDenda) || 0;
-    
-    let syarat = s.syaratKhusus;
-    if (typeof syarat === 'boolean') {
-      syarat = syarat;
-    } else if (typeof syarat === 'string') {
-      syarat = syarat.toLowerCase().trim() === 'true' || syarat.toLowerCase().trim() === 'yes' || syarat === '1';
-    } else {
-      syarat = false;
-    }
-    
-    return !(sisa === 0 && syarat === true);
-  }).length;
-  
+  // Header with count
   const header = document.createElement("div");
   header.className = "class-header";
-  header.textContent = `${kelas} - ${bermasalahCount} Siswa Bermasalah`;
+  header.textContent = `${kelas} - ${studentsBermasalah.length} Siswa Bermasalah`;
   wakelContent.appendChild(header);
 
+  // List container for bermasalah students
   const listContainer = document.createElement("div");
   listContainer.className = "list-container";
-  listContainer.style.paddingBottom = "100px";
+  listContainer.id = "listBermasalah";
 
-  students.forEach(s => {
-    const sisa = parseFloat(s.sisaDenda) || 0;
+  studentsBermasalah.forEach((s, index) => {
+    const sisa = Math.abs(parseFloat(s.sisaDenda) || 0);
     
     let syarat = s.syaratKhusus;
     if (typeof syarat === 'boolean') {
@@ -781,7 +776,7 @@ function showClassStudents(kelas, students){
       rowsHtml += `
         <div class="list-item-row">
           <span class="list-item-label">Sisa Denda:</span>
-          <span class="list-item-value list-item-denda">${rupiah(Math.abs(sisa))}</span>
+          <span class="list-item-value list-item-denda">-${rupiah(sisa)}</span>
         </div>
         <div class="list-item-row">
           <span class="list-item-label">Status:</span>
@@ -812,9 +807,95 @@ function showClassStudents(kelas, students){
   });
 
   wakelContent.appendChild(listContainer);
-  addFloatingButtons(kelas, students);
-}
 
+  // Container for AMAN list (hidden by default)
+  const amanContainer = document.createElement("div");
+  amanContainer.id = "listAman";
+  amanContainer.style.display = "none";
+  amanContainer.className = "list-container";
+  amanContainer.style.marginTop = "20px";
+
+  // Header for AMAN section
+  const amanHeader = document.createElement("div");
+  amanHeader.className = "class-header";
+  amanHeader.style.background = "#1e8e3e";
+  amanHeader.textContent = `${kelas} - ${studentsAman.length} Siswa Aman`;
+  amanContainer.appendChild(amanHeader);
+
+  studentsAman.forEach((s, index) => {
+    const div = document.createElement("div");
+    div.className = "list-item safe";
+
+    div.innerHTML = `
+      <div class="list-item-header">
+        <span class="list-item-name">${s.nama}</span>
+        <span class="badge green">AMAN</span>
+      </div>
+      <div class="list-item-row">
+        <span class="list-item-label">Kelas:</span>
+        <span class="list-item-value">${s.kelas}</span>
+      </div>
+      <div class="list-item-row">
+        <span class="list-item-label">Ekstra:</span>
+        <span class="list-item-value">${s.ekstra}</span>
+      </div>
+      <div class="list-item-row">
+        <span class="list-item-label">Status:</span>
+        <span class="list-item-value list-item-aman">Tidak ada tanggungan</span>
+      </div>
+    `;
+
+    div.onclick = () => showAttendance(s);
+    amanContainer.appendChild(div);
+  });
+
+  wakelContent.appendChild(amanContainer);
+
+  // Button to toggle AMAN list
+  const toggleBtn = document.createElement("button");
+  toggleBtn.className = "bigBtn";
+  toggleBtn.id = "btnToggleAman";
+  toggleBtn.style.marginTop = "20px";
+  toggleBtn.style.background = "#1e8e3e";
+  toggleBtn.textContent = `📋 Daftar Siswa Aman (${studentsAman.length})`;
+  
+  toggleBtn.onclick = () => {
+    const amanList = document.getElementById("listAman");
+    const bermasalahList = document.getElementById("listBermasalah");
+    const btn = document.getElementById("btnToggleAman");
+    
+    if (amanList.style.display === "none") {
+      // Show AMAN, hide Bermasalah
+      amanList.style.display = "block";
+      bermasalahList.style.display = "none";
+      btn.textContent = "📋 Kembali ke Daftar Bermasalah";
+      btn.style.background = "#CC8B08";
+      
+      // Update header
+      header.style.background = "#1e8e3e";
+      header.textContent = `${kelas} - ${studentsAman.length} Siswa Aman`;
+    } else {
+      // Show Bermasalah, hide AMAN
+      amanList.style.display = "none";
+      bermasalahList.style.display = "block";
+      btn.textContent = `📋 Daftar Siswa Aman (${studentsAman.length})`;
+      btn.style.background = "#1e8e3e";
+      
+      // Update header
+      header.style.background = "#CC8B08";
+      header.textContent = `${kelas} - ${studentsBermasalah.length} Siswa Bermasalah`;
+    }
+  };
+
+  wakelContent.appendChild(toggleBtn);
+  
+  // Add padding for floating buttons
+  const spacer = document.createElement("div");
+  spacer.style.height = "100px";
+  wakelContent.appendChild(spacer);
+
+  addFloatingButtons(kelas, studentsBermasalah);
+}
 // Add floating back and WhatsApp buttons
 function addFloatingButtons(kelas, students) {
   // Remove existing floating buttons if any
