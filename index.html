@@ -389,8 +389,8 @@ color:#1e8e3e;
 /* ---------- FLOATING BUTTONS ---------- */
 .floating-btn {
   position: fixed;
-  width: 70px;
-  height: 70px;
+  width: 65px;
+  height: 65px;
   border-radius: 50%;
   border: none;
   cursor: pointer;
@@ -667,33 +667,40 @@ function hideLoading() {
 
 // Render all classes with TANGGUNGAN summary
 function renderWakelView(){
-document.querySelectorAll('.floating-btn').forEach(btn => btn.remove());
+  // Remove any floating buttons when going back to class list
+  document.querySelectorAll('.floating-btn').forEach(btn => btn.remove());
   
   wakelContent.innerHTML = "";
 
-  // Unique classes
   const uniqueKelas = [...new Set(
     siswaData.map(s => s.kelas).filter(k => k)
   )].sort();
 
   uniqueKelas.forEach(kelas => {
-
-    // Students in class with tanggungan
-    const students = siswaData.filter(s=>{
-      const sisa = Number(s.sisaDenda) || 0;
-      const syarat = (s.syaratKhusus || "").toString().toLowerCase();
-      const aman = sisa === 0 && syarat === "true";
-      return s.kelas === kelas && !aman;
+    const students = siswaData.filter(s => {
+      if (s.kelas !== kelas) return false;
+      
+      const sisa = parseFloat(s.sisaDenda) || 0;
+      
+      let syarat = s.syaratKhusus;
+      if (typeof syarat === 'boolean') {
+        syarat = syarat;
+      } else if (typeof syarat === 'string') {
+        syarat = syarat.toLowerCase().trim() === 'true' || syarat.toLowerCase().trim() === 'yes' || syarat === '1';
+      } else {
+        syarat = false;
+      }
+      
+      const isAman = (sisa === 0 && syarat === true);
+      return !isAman; // Keep if NOT aman
     });
 
-    if(students.length === 0) return; // skip if no tanggungan
+    if(students.length === 0) return;
 
-    // Total sisa denda
-    const totalDenda = students.reduce((sum,s)=>{
-      return sum + (Number(s.sisaDenda) || 0);
-    },0);
+    const totalDenda = students.reduce((sum, s) => {
+      return sum + (parseFloat(s.sisaDenda) || 0);
+    }, 0);
 
-    // Class button
     const btn = document.createElement("button");
     btn.className = "iconBtn";
     btn.style.width = "calc(50% - 8px)";
@@ -708,46 +715,57 @@ document.querySelectorAll('.floating-btn').forEach(btn => btn.remove());
     `;
 
     btn.onclick = () => showClassStudents(kelas, students);
-
     wakelContent.appendChild(btn);
   });
 }
 
 function showClassStudents(kelas, students){
   wakelContent.innerHTML = "";
-
-  // Store current class data for WhatsApp button
   wakelContent.dataset.currentKelas = kelas;
   wakelContent.dataset.currentStudents = JSON.stringify(students);
 
-  // Class header with count
-  const header = document.createElement("div");
-  header.className = "class-header";
-  
-  // Count students with actual tanggungan (for header)
+  // Count students with actual tanggungan
   const bermasalahCount = students.filter(s => {
-    const sisa = Number(s.sisaDenda) || 0;
-    const syarat = (s.syaratKhusus || "").toString().toLowerCase();
-    return !(sisa === 0 && syarat === "true");
+    const sisa = parseFloat(s.sisaDenda) || 0;
+    
+    let syarat = s.syaratKhusus;
+    if (typeof syarat === 'boolean') {
+      syarat = syarat;
+    } else if (typeof syarat === 'string') {
+      syarat = syarat.toLowerCase().trim() === 'true' || syarat.toLowerCase().trim() === 'yes' || syarat === '1';
+    } else {
+      syarat = false;
+    }
+    
+    return !(sisa === 0 && syarat === true);
   }).length;
   
+  const header = document.createElement("div");
+  header.className = "class-header";
   header.textContent = `${kelas} - ${bermasalahCount} Siswa Bermasalah`;
   wakelContent.appendChild(header);
 
-  // Create list container
   const listContainer = document.createElement("div");
   listContainer.className = "list-container";
-  listContainer.style.paddingBottom = "100px"; // Space for floating buttons
+  listContainer.style.paddingBottom = "100px";
 
   students.forEach(s => {
-    const sisa = Number(s.sisaDenda) || 0;
-    const syarat = (s.syaratKhusus || "").toString().toLowerCase();
-    const aman = sisa === 0 && syarat === "true";
+    const sisa = parseFloat(s.sisaDenda) || 0;
+    
+    let syarat = s.syaratKhusus;
+    if (typeof syarat === 'boolean') {
+      syarat = syarat;
+    } else if (typeof syarat === 'string') {
+      syarat = syarat.toLowerCase().trim() === 'true' || syarat.toLowerCase().trim() === 'yes' || syarat === '1';
+    } else {
+      syarat = false;
+    }
+    
+    const isAman = (sisa === 0 && syarat === true);
     
     const div = document.createElement("div");
-    div.className = aman ? "list-item safe" : "list-item";
+    div.className = isAman ? "list-item safe" : "list-item";
 
-    // Build rows following search rules
     let rowsHtml = `
       <div class="list-item-row">
         <span class="list-item-label">Kelas:</span>
@@ -759,8 +777,7 @@ function showClassStudents(kelas, students){
       </div>
     `;
 
-    // Only show sisa and tanggungan if not aman
-    if (!aman) {
+    if (!isAman) {
       rowsHtml += `
         <div class="list-item-row">
           <span class="list-item-label">Sisa Denda:</span>
@@ -768,7 +785,9 @@ function showClassStudents(kelas, students){
         </div>
         <div class="list-item-row">
           <span class="list-item-label">Status:</span>
-          <span class="list-item-value" style="color: #d93025; font-weight: 600;">Ada Tanggungan</span>
+          <span class="list-item-value" style="color: #d93025; font-weight: 600;">
+            ${!syarat ? 'Ada Tanggungan' : 'Tidak ada tanggungan'}
+          </span>
         </div>
       `;
     } else {
@@ -783,7 +802,7 @@ function showClassStudents(kelas, students){
     div.innerHTML = `
       <div class="list-item-header">
         <span class="list-item-name">${s.nama}</span>
-        <span class="badge ${aman ? 'green':'red'}">${aman ? 'AMAN' : 'TANGGUNGAN'}</span>
+        <span class="badge ${isAman ? 'green':'red'}">${isAman ? 'AMAN' : 'TANGGUNGAN'}</span>
       </div>
       ${rowsHtml}
     `;
@@ -793,8 +812,6 @@ function showClassStudents(kelas, students){
   });
 
   wakelContent.appendChild(listContainer);
-
-  // Add floating buttons
   addFloatingButtons(kelas, students);
 }
 
@@ -834,11 +851,23 @@ function addFloatingButtons(kelas, students) {
 
 // Generate WhatsApp message
 function generateWhatsAppMessage(kelas, students) {
-  // Filter only students with tanggungan (sisa > 0 OR syarat not true)
+  // Filter: exclude students with sisa=0 AND syarat=true
   const bermasalah = students.filter(s => {
-    const sisa = Number(s.sisaDenda) || 0;
-    const syarat = (s.syaratKhusus || "").toString().toLowerCase();
-    return !(sisa === 0 && syarat === "true");
+    const sisa = Math.abs(parseFloat(s.sisaDenda) || 0);
+    
+    // Handle syaratKhusus
+    let syarat = s.syaratKhusus;
+    if (typeof syarat === 'boolean') {
+      syarat = syarat;
+    } else if (typeof syarat === 'string') {
+      syarat = syarat.toLowerCase().trim() === 'true' || syarat.toLowerCase().trim() === 'yes' || syarat === '1';
+    } else {
+      syarat = false;
+    }
+    
+    const isAman = (sisa === 0 && syarat === true);
+    
+    return !isAman;
   });
 
   if (bermasalah.length === 0) {
@@ -851,31 +880,40 @@ function generateWhatsAppMessage(kelas, students) {
   message += `Total: ${bermasalah.length} siswa bermasalah\n\n`;
 
   bermasalah.forEach((s, index) => {
-    const sisa = Number(s.sisaDenda) || 0;
-    const syarat = (s.syaratKhusus || "").toString().toLowerCase();
+    const sisa = Math.abs(parseFloat(s.sisaDenda) || 0);
     
-    let conditions = [];
-    
-    // Check sisa denda
-    if (sisa > 0) {
-      conditions.push(`sisa denda ${rupiah(sisa)}`);
+    // Handle syaratKhusus
+    let syarat = s.syaratKhusus;
+    if (typeof syarat === 'boolean') {
+      syarat = syarat;
+    } else if (typeof syarat === 'string') {
+      syarat = syarat.toLowerCase().trim() === 'true' || syarat.toLowerCase().trim() === 'yes' || syarat === '1';
+    } else {
+      syarat = false;
     }
     
-    // Check syarat khusus
-    if (syarat !== "true") {
-      conditions.push('belum memenuhi syarat khusus');
+    const hasSisa = sisa > 0;
+    const hasSyarat = syarat === true;
+    
+    let line = `${index + 1}. ${s.nama}`;
+    
+    // FIX: Add minus (-) before the number
+    if (hasSisa && hasSyarat) {
+      line += ` - -${rupiah(sisa)}`;
+    } 
+    else if (hasSisa && !hasSyarat) {
+      line += ` - -${rupiah(sisa)} - syarat khusus`;
+    } 
+    else if (!hasSisa && !hasSyarat) {
+      line += ` - syarat khusus`;
     }
     
-    const conditionText = conditions.join(' dan ');
-    
-    message += `${index + 1}. ${s.nama} - ${conditionText}\n`;
+    message += line + '\n';
   });
 
-  // Encode for URL
   const encodedMessage = encodeURIComponent(message);
   const waUrl = `https://wa.me/?text=${encodedMessage}`;
   
-  // Open WhatsApp
   window.open(waUrl, '_blank');
 }
 /* ---------- SEARCH ---------- */
@@ -1024,7 +1062,6 @@ document.getElementById("year").textContent = new Date().getFullYear();
 </footer>
 </body>
 </html>
-
 
 
 
