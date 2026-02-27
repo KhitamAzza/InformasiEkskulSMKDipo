@@ -377,6 +377,11 @@ color:#1e8e3e;
   <div id="suggestions"></div>
 </div>
 
+<div id="wakelArea" style="display:none; padding:20px;">
+  <div id="wakelContent" style="display:flex; flex-wrap:wrap; gap:16px;"></div>
+  <button class="bigBtn" id="backWakelBtn" style="margin-top:20px;">Kembali</button>
+</div>
+
 <div id="overlay" class="overlay hidden">
   <div id="detailBox" class="detail-box"></div>
 </div>
@@ -419,7 +424,112 @@ document.getElementById("backBtn").onclick = ()=>{
   document.getElementById("suggestions").innerHTML="";
   document.getElementById("searchInput").value="";
 };
+const wakelArea = document.getElementById("wakelArea");
+const wakelContent = document.getElementById("wakelContent");
 
+document.getElementById("btnWakel").onclick = ()=>{
+  menu.style.display = "none";
+  wakelArea.style.display = "block";
+  renderWakelView();
+};
+
+document.getElementById("backWakelBtn").onclick = ()=>{
+  wakelArea.style.display = "none";
+  menu.style.display = "flex";
+  wakelContent.innerHTML = "";
+};
+
+// Render all classes with TANGGUNGAN summary
+function renderWakelView(){
+
+  wakelContent.innerHTML = "";
+
+  // Unique classes
+  const uniqueKelas = [...new Set(
+    siswaData.map(s => s.kelas).filter(k => k)
+  )].sort();
+
+  uniqueKelas.forEach(kelas => {
+
+    // Students in class with tanggungan
+    const students = siswaData.filter(s=>{
+      const sisa = Number(s.sisaDenda) || 0;
+      const syarat = (s.syaratKhusus || "").toString().toLowerCase();
+      const aman = sisa === 0 && syarat === "true";
+      return s.kelas === kelas && !aman;
+    });
+
+    if(students.length === 0) return; // skip if no tanggungan
+
+    // Total sisa denda
+    const totalDenda = students.reduce((sum,s)=>{
+      return sum + (Number(s.sisaDenda) || 0);
+    },0);
+
+    // Class button
+    const btn = document.createElement("button");
+    btn.className = "iconBtn";
+    btn.style.width = "calc(50% - 8px)";
+    btn.style.height = "100px";
+    btn.style.background = "#CC8B08";
+    btn.style.flexDirection = "column";
+    btn.style.fontSize = "14px";
+
+    btn.innerHTML = `
+      <div style="font-weight:700; color:white; font-size:16px;">${kelas}</div>
+      <div style="color:white; margin-top:6px;">Total Denda: ${rupiah(totalDenda)}</div>
+    `;
+
+    btn.onclick = () => showClassStudents(kelas, students);
+
+    wakelContent.appendChild(btn);
+  });
+}
+
+// Show students in selected class
+function showClassStudents(kelas, students){
+
+  wakelContent.innerHTML = "";
+
+  // Header
+  const header = document.createElement("div");
+  header.style.fontWeight = "700";
+  header.style.fontSize = "16px";
+  header.style.marginBottom = "12px";
+  header.textContent = `${kelas} - Tanggungan`;
+  wakelContent.appendChild(header);
+
+  // Student cards
+  students.forEach(s => {
+
+    const div = document.createElement("div");
+    div.className = "suggestion";
+
+    const sisa = Number(s.sisaDenda) || 0;
+    const syarat = (s.syaratKhusus || "").toString().toLowerCase();
+    const aman = sisa === 0 && syarat === "true";
+    const statusText = aman ? "AMAN" : "TANGGUNGAN";
+
+    div.innerHTML = `
+      <div class="info">
+        <div class="name-row">
+          <span class="name">${s.nama}</span>
+          <span class="badge ${aman ? 'green':'red'}">${statusText}</span>
+        </div>
+        <div class="meta">${s.kelas}</div>
+        <div class="meta">${s.ekstra}</div>
+        <div class="sisa">Sisa Denda : ${rupiah(Math.abs(sisa))}</div>
+        <div style="font-size:12px; margin-top:4px; color:#666;">
+          ${aman ? "Tidak ada tanggungan" : "Ada tanggungan"}
+        </div>
+      </div>
+    `;
+
+    div.onclick = ()=>showAttendance(s);
+    wakelContent.appendChild(div);
+  });
+
+}
 /* ---------- SEARCH ---------- */
 function rupiah(angka){
   angka = Number(angka) || 0;
@@ -446,21 +556,29 @@ input.addEventListener("input", ()=>{
     div.className="suggestion";
 
     const sisa = Number(s.sisaDenda) || 0;
-const lunas = sisa === 0;
-const statusText = lunas ? "LUNAS" : "DENDA";
+const syarat = (s.syaratKhusus || "").toString().toLowerCase();
 
+const aman = sisa === 0 && syarat === "true";
+const statusText = aman ? "AMAN" : "TANGGUNGAN";
+const tanggunganText = syarat === "true"
+  ? "Tidak ada tanggungan"
+  : "Ada tanggungan";
     div.innerHTML = `
   <div class="info">
     <div class="name-row">
       <span class="name">${s.nama}</span>
-      <span class="badge ${lunas ? 'green':'red'}">${statusText}</span>
+      <span class="badge ${aman ? 'green':'red'}">${statusText}</span>
     </div>
 
     <div class="meta">${s.kelas}</div>
     <div class="meta">${s.ekstra}</div>
 
-    ${!lunas ? `<div class="sisa">Sisa Denda : ${rupiah(Math.abs(sisa))}</div>` : ``}
+   ${!aman ? `
+  <div class="sisa">Sisa Denda : ${rupiah(Math.abs(sisa))}</div>
+  <div style="font-size:12px; margin-top:4px; color:#666;">
+    ${tanggunganText}
   </div>
+` : ``}
 `;
 
     div.onclick = ()=>showAttendance(s);
@@ -505,21 +623,22 @@ function showAttendance(s){
 html += `
   <hr style="margin:15px 0;">
 
-  <div style="display:flex; gap:10px; justify-content:space-between;">
-    <div style="flex:1; background:#fff3f3; padding:10px; border-radius:8px;">
-      <div style="font-size:12px; color:#888;">DENDA</div>
-      <div style="font-weight:bold;">${rupiah(s.denda)}</div>
+  <div style="display:flex; gap:12px; justify-content:space-between;">
+
+    <div style="flex:1; background:#fff3f3; padding:12px; border-radius:10px;">
+      <div style="font-size:12px; color:#888;">SISA DENDA</div>
+      <div style="font-size:18px; font-weight:bold;">
+        ${rupiah(s.sisaDenda)}
+      </div>
     </div>
 
-    <div style="flex:1; background:#e8f5ff; padding:10px; border-radius:8px;">
-      <div style="font-size:12px; color:#888;">DIBAYAR</div>
-      <div style="font-weight:bold;">${rupiah(s.dibayar)}</div>
+    <div style="flex:1; background:#f4f4f4; padding:12px; border-radius:10px;">
+      <div style="font-size:12px; color:#888;">SYARAT KHUSUS</div>
+      <div style="font-weight:bold;">
+  ${s.syaratKhusus ? "AMAN" : "TANGGUNGAN"}
+</div>
     </div>
 
-    <div style="flex:1; background:#e9f7ef; padding:10px; border-radius:8px;">
-      <div style="font-size:12px; color:#888;">SISA</div>
-      <div style="font-weight:bold;">${rupiah(s.sisaDenda)}</div>
-    </div>
   </div>
 `;
   detailBox.innerHTML = html;
@@ -557,6 +676,7 @@ document.getElementById("year").textContent = new Date().getFullYear();
 </footer>
 </body>
 </html>
+
 
 
 
