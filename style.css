@@ -1,0 +1,560 @@
+/* ---------- GLOBAL ---------- */
+body{
+  font-family:system-ui;
+  background:#f2f4f8;
+  margin:0;
+  text-align:center;
+  overflow-y:scroll;
+}
+
+/* ---------- HEADER ---------- */
+.mainHeader{
+  background:#9B6A06;
+  color:white;
+  padding:20px 15px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.mainHeader h1{
+  margin:0;
+  font-size:22px;
+  letter-spacing:1px;
+  text-align:center;
+  flex:1;
+}
+
+.logo{
+  height:50px;
+  width:auto;
+  object-fit:contain;
+}
+
+@media (max-width:600px){
+  .logo{ height:35px; }
+  .mainHeader h1{ font-size:16px; }
+}
+
+/* ---------- MAIN MENU ---------- */
+#menu{
+  padding:40px 20px;
+}
+
+.bigBtn{
+  display:block;
+  width:260px;
+  max-width:90%;
+  margin:15px auto;
+  padding:18px;
+  font-size:18px;
+  border:none;
+  border-radius:12px;
+  background:#2d6cdf;
+  color:white;
+  cursor:pointer;
+}
+
+.bigBtn:hover{
+  background:#1e4fa8;
+}
+
+/* ---------- SEARCH AREA ---------- */
+#searchArea{
+  display:none;
+  padding:20px;
+}
+
+#searchInput{
+  width:100%;
+  max-width:480px;
+  padding:16px 14px;
+  font-size:16px;
+  border-radius:12px;
+  border:1px solid #ccc;
+  box-sizing:border-box;
+}
+
+#backBtn{
+  margin-bottom:15px;
+  background:#CC8B08;
+}
+
+/* ---------- SUGGESTION CARD ---------- */
+.suggestion{
+  background:white;
+  padding:12px 14px;
+  margin:8px 0;
+  border-radius:12px;
+  cursor:pointer;
+  box-shadow:0 2px 8px rgba(0,0,0,0.08);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.info{
+  text-align:left;
+  min-width:0;
+}
+
+.name-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+}
+
+.name{
+  font-weight:600;
+  font-size:15px;
+  flex:1;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.meta{
+  font-size:13px;
+  color:#666;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.badge{
+  flex-shrink:0;
+  padding:6px 10px;
+  border-radius:999px;
+  font-weight:700;
+  font-size:12px;
+}
+
+.badge.red{
+  background:#fde7e6;
+  color:#d93025;
+}
+
+.badge.green{
+  background:#e6f4ea;
+  color:#1e8e3e;
+}
+
+/* ---------- ATTENDANCE ROW ---------- */
+.absenRow{
+  display:flex;
+  justify-content:space-between;
+  padding:10px 4px;
+  border-bottom:1px solid #eee;
+  font-size:14px;
+}
+
+.absenTanggal{
+  color:#444;
+}
+
+.absenStatus{
+  font-weight:600;
+}
+
+.status{
+  display:inline-block;
+  padding:4px 10px;
+  border-radius:8px;
+  font-size:12px;
+  font-weight:bold;
+  margin-top:6px;
+}
+
+.denda{
+  background:#ffe5e5;
+  color:#c62828;
+}
+
+.lunas{
+  background:#e7f7ea;
+  color:#1b8f3a;
+}
+
+.sisa{
+  font-size:13px;
+  margin-top:4px;
+  color:#444;
+}
+
+.nama{
+  font-weight:600;
+  font-size:15px;
+  word-break:break-word;
+}
+
+.overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.35);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:999;
+}
+
+.hidden{
+  display:none;
+}
+
+.detail-box{
+  background:white;
+  width:min(95%,500px);
+  max-height:80vh;
+  overflow:auto;
+  border-radius:14px;
+  padding:18px;
+  box-shadow:0 10px 30px rgba(0,0,0,.2);
+}
+
+/* ---------- ICON MENU ---------- */
+.menuButtons{
+  padding:80px 20px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:60px;
+  flex-wrap:wrap;
+  max-width:900px;
+  margin:0 auto;
+}
+
+.iconBtn{
+  width:170px;
+  height:180px;
+  border-radius:22px;
+  border:none;
+  background:#CC8B08;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  transition:.25s;
+  box-shadow:0 10px 25px rgba(0,0,0,.25);
+}
+
+#btnWakel{
+  background:#CC8B08;
+}
+
+.iconBtn img{
+  width:85px;
+  height:85px;
+  object-fit:contain;
+}
+
+.btnLabel{
+  margin-top:14px;
+  font-size:16px;
+  color:white;
+  font-weight:700;
+  letter-spacing:.8px;
+}
+
+.iconBtn:hover{
+  transform:translateY(-8px) scale(1.03);
+  box-shadow:0 18px 40px rgba(0,0,0,.35);
+}
+
+@media (max-width:600px){
+  .iconBtn{
+    width:110px;
+    height:120px;
+  }
+  .iconBtn img{
+    width:52px;
+    height:52px;
+  }
+}
+
+/* ---------- LIST VIEW FOR WAKEL ---------- */
+#wakelContent {
+  display: flex;
+  flex-direction: column !important; /* Force column layout */
+  align-items: center;
+  width: 100%;
+}
+
+.list-container {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.class-header {
+  background: #CC8B08;
+  color: white;
+  padding: 12px 16px;
+  margin: 0 0 10px 0; /* Remove top margin, keep bottom */
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 16px;
+  text-align: left;
+  width: 100%;
+  max-width: 600px;
+  box-sizing: border-box;
+}
+
+.list-item {
+  background: white;
+  padding: 14px 16px;
+  margin: 8px 0;
+  border-radius: 10px;
+  border-left: 4px solid #d93025;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.list-item:hover {
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+
+.list-item.safe {
+  border-left-color: #1e8e3e;
+}
+
+.list-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.list-item-name {
+  font-weight: 700;
+  font-size: 16px;
+  color: #222;
+  flex: 1;
+}
+
+.list-item-row {
+  font-size: 13px;
+  color: #555;
+  margin-top: 3px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.list-item-label {
+  color: #888;
+  min-width: 85px;
+}
+
+.list-item-value {
+  color: #333;
+  font-weight: 500;
+}
+
+.list-item-denda {
+  color: #c62828;
+  font-weight: 700;
+}
+
+.list-item-aman {
+  color: #1e8e3e;
+  font-weight: 600;
+}
+
+/* ---------- FLOATING BUTTONS ---------- */
+.floating-btn {
+  position: fixed;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 100;
+}
+
+.floating-btn:hover {
+  transform: translateY(-4px) scale(1.08);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.35);
+}
+
+.floating-btn:active {
+  transform: translateY(-2px) scale(1.02);
+}
+
+.back-float {
+  left: 20px;
+  bottom: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.whatsapp-float {
+  right: 20px;
+  bottom: 20px;
+  background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+  color: white;
+}
+
+.floating-btn svg {
+  width: 32px;
+  height: 32px;
+  fill: currentColor;
+}
+
+/* ---------- LOADING DIALOG ---------- */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.loading-box {
+  background: white;
+  padding: 30px 40px;
+  border-radius: 16px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  animation: popIn 0.3s ease;
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #CC8B08;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 16px;
+  color: #333;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.loading-sub {
+  font-size: 13px;
+  color: #888;
+}
+
+/* ---------- FOOTER ---------- */
+.mainFooter{
+  margin-top:345px;
+  padding:40px 20px;
+  background:#2b2b2b;
+  color:#ccc;
+  text-align:center;
+}
+
+.footerTitle{
+  font-size:16px;
+  font-weight:600;
+  color:white;
+  letter-spacing:.5px;
+}
+
+.footerSub{
+  margin-top:6px;
+  font-size:14px;
+  color:#aaa;
+}
+
+.footerNote{
+  margin-top:16px;
+  font-size:13px;
+  color:#888;
+}
+
+.footerSignature{
+  margin-top:20px;
+  font-size:12px;
+  color:#666;
+  letter-spacing:.5px;
+}
+
+.footerContact{
+  margin-top:12px;
+  font-size:13px;
+  color:#aaa;
+}
+
+.footerContact a{
+  color:#CC8B08;
+  text-decoration:none;
+}
+
+.footerContact a:hover{
+  text-decoration:underline;
+}
+/* ---------- REFRESH BUTTON ---------- */
+.refresh-float {
+  right: 20px;
+  bottom: 100px; /* Above WhatsApp button in wakel, above back in search */
+  background: linear-gradient(135deg, #FF6B6B 0%, #EE5A6F 100%);
+  color: white;
+}
+
+.refresh-float.spinning svg {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ---------- TOAST NOTIFICATION ---------- */
+.toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-100px);
+  background: #333;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  z-index: 1001;
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+.toast.error {
+  background: #d93025;
+}
+
+.toast.success {
+  background: #1e8e3e;
+}
