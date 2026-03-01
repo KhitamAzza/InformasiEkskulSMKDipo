@@ -205,23 +205,63 @@ function showClassStudents(kelas, studentsBermasalah, studentsAman){
     margin: 0 auto;
   `;
 
-  // SINGLE Header - changes color based on view
+  // Header row with title and toggle button
+  const headerRow = document.createElement("div");
+  headerRow.style.cssText = `
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin: 0 0 10px 0;
+    gap: 10px;
+  `;
+
+  // Title header (left side)
   const header = document.createElement("div");
-  header.id = "mainHeader"; // Add ID for easy access
+  header.id = "mainHeader";
   header.style.cssText = `
     background: #CC8B08;
     color: white;
     padding: 12px 16px;
-    margin: 0 0 10px 0;
     border-radius: 8px;
     font-weight: 700;
-    font-size: 16px;
+    font-size: 14px;
     text-align: left;
-    width: 100%;
+    flex: 1;
     box-sizing: border-box;
   `;
   header.textContent = `${kelas} - ${studentsBermasalah.length} Siswa Bermasalah`;
-  mainContainer.appendChild(header);
+  headerRow.appendChild(header);
+
+  // Toggle button (right side)
+  const toggleBtn = document.createElement("button");
+  toggleBtn.id = "btnToggleAman";
+  toggleBtn.style.cssText = `
+    background: #1e8e3e;
+    color: white;
+    border: none;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    transition: all 0.2s;
+  `;
+  toggleBtn.textContent = `📋 Aman (${studentsAman.length})`;
+  
+  toggleBtn.onmouseover = () => {
+    toggleBtn.style.transform = "translateY(-2px)";
+    toggleBtn.style.boxShadow = "0 4px 12px rgba(0,0,0,0.2)";
+  };
+  toggleBtn.onmouseout = () => {
+    toggleBtn.style.transform = "translateY(0)";
+    toggleBtn.style.boxShadow = "0 2px 8px rgba(0,0,0,0.15)";
+  };
+  
+  headerRow.appendChild(toggleBtn);
+  mainContainer.appendChild(headerRow);
 
   // List container for bermasalah students
   const listContainer = document.createElement("div");
@@ -328,13 +368,7 @@ function showClassStudents(kelas, studentsBermasalah, studentsAman){
 
   mainContainer.appendChild(amanListContainer);
 
-  // Toggle button
-  const toggleBtn = document.createElement("button");
-  toggleBtn.className = "bigBtn";
-  toggleBtn.id = "btnToggleAman";
-  toggleBtn.style.cssText = "margin-top: 20px; background: #1e8e3e; width: 100%;";
-  toggleBtn.textContent = `📋 Daftar Siswa Aman (${studentsAman.length})`;
-  
+  // Toggle button click handler
   toggleBtn.onclick = () => {
     const amanList = document.getElementById("listAman");
     const bermasalahList = document.getElementById("listBermasalah");
@@ -344,27 +378,29 @@ function showClassStudents(kelas, studentsBermasalah, studentsAman){
       // Show AMAN list, hide bermasalah list
       amanList.style.display = "block";
       bermasalahList.style.display = "none";
-      toggleBtn.textContent = "📋 Kembali ke Daftar Bermasalah";
+      
+      // Update button text and style (same position)
+      toggleBtn.textContent = `📋 Bermasalah (${studentsBermasalah.length})`;
       toggleBtn.style.background = "#CC8B08";
       
-      // Change single header to green
+      // Update header
       mainHeader.style.background = "#1e8e3e";
       mainHeader.textContent = `${kelas} - ${studentsAman.length} Siswa Aman`;
     } else {
       // Show bermasalah list, hide AMAN list
       amanList.style.display = "none";
       bermasalahList.style.display = "block";
-      toggleBtn.textContent = `📋 Daftar Siswa Aman (${studentsAman.length})`;
+      
+      // Update button text and style (same position)
+      toggleBtn.textContent = `📋 Aman (${studentsAman.length})`;
       toggleBtn.style.background = "#1e8e3e";
       
-      // Change single header back to orange
+      // Update header
       mainHeader.style.background = "#CC8B08";
       mainHeader.textContent = `${kelas} - ${studentsBermasalah.length} Siswa Bermasalah`;
     }
   };
 
-  mainContainer.appendChild(toggleBtn);
-  
   // Spacer for floating buttons
   const spacer = document.createElement("div");
   spacer.style.height = "100px";
